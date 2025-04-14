@@ -1,0 +1,61 @@
+
+//@version=5
+indicator("52 Nation Pro Signal by Michael K", overlay=true)
+
+// Timeframe lock (15 minute only)
+if (timeframe.period != "15")
+    runtime.error("52 Nation Pro works only on the 15-minute timeframe.")
+
+// Inputs
+shortMA = ta.ema(close, 9)
+longMA = ta.ema(close, 21)
+rsi = ta.rsi(close, 14)
+
+// Conditions
+buy = ta.crossover(shortMA, longMA) and rsi > 30 and rsi < 70
+sell = ta.crossunder(shortMA, longMA) and rsi > 30 and rsi < 70
+
+// Plot MAs
+plot(shortMA, color=color.green, title="Short EMA")
+plot(longMA, color=color.red, title="Long EMA")
+
+// Buy/Sell Arrows
+plotshape(buy, location=location.belowbar, color=color.lime, style=shape.labelup, text="BUY")
+plotshape(sell, location=location.abovebar, color=color.red, style=shape.labeldown, text="SELL")
+
+// TP and SL Levels (Only on Buy signals)
+tp1 = buy ? close * 1.005 : na
+tp2 = buy ? close * 1.01 : na
+tp3 = buy ? close * 1.015 : na
+sl = buy ? close * 0.95 : na  // 50% drawdown stop loss
+
+plot(tp1, color=color.yellow, title="TP1", linewidth=1, style=plot.style_linebr)
+plot(tp2, color=color.orange, title="TP2", linewidth=1, style=plot.style_linebr)
+plot(tp3, color=color.fuchsia, title="TP3", linewidth=1, style=plot.style_linebr)
+plot(sl, color=color.red, title="Stop Loss", linewidth=1, style=plot.style_linebr)
+
+// Label mistari
+var label ltp1 = na
+var label ltp2 = na
+var label ltp3 = na
+var label lsl = na
+
+if buy
+    ltp1 := label.new(bar_index, tp1, "TP1", style=label.style_label_up, color=color.yellow, textcolor=color.black)
+    ltp2 := label.new(bar_index, tp2, "TP2", style=label.style_label_up, color=color.orange, textcolor=color.black)
+    ltp3 := label.new(bar_index, tp3, "TP3", style=label.style_label_up, color=color.fuchsia, textcolor=color.white)
+    lsl := label.new(bar_index, sl, "SL", style=label.style_label_down, color=color.red, textcolor=color.white)
+
+// Alerts
+alertcondition(buy, title="BUY Alert", message="52 Nation Signal: BUY Signal!")
+alertcondition(sell, title="SELL Alert", message="52 Nation Signal: SELL Signal!")
+
+// Basic pattern detection (Double Bottom and Double Top)
+doubleTop = high[4] < high[2] and high[2] > high and high[1] < high[2]
+doubleBottom = low[4] > low[2] and low[2] < low and low[1] > low[2]
+
+plotshape(doubleTop, style=shape.triangledown, location=location.abovebar, color=color.purple, text="Double Top")
+plotshape(doubleBottom, style=shape.triangleup, location=location.belowbar, color=color.teal, text="Double Bottom")
+
+alertcondition(doubleTop, title="Double Top Alert", message="52 Nation: Double Top pattern detected")
+alertcondition(doubleBottom, title="Double Bottom Alert", message="52 Nation: Double Bottom pattern detected")
